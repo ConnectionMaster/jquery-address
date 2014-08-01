@@ -578,34 +578,34 @@
     })();
     
     $.fn.address = function(fn) {
-        $(this).each(function(index) {
-            if (!$(this).data('address')) {
-                $(this).on('click', function(e) {
-                    if (e.shiftKey || e.ctrlKey || e.metaKey || e.which == 2) {
-                        return true;
-                    }
-                    var target = e.currentTarget;
-                    if ($(target).is('a')) {
-                        e.preventDefault();
-                        var value = fn ? fn.call(target) : 
-                            /address:/.test($(target).attr('rel')) ? $(target).attr('rel').split('address:')[1].split(' ')[0] : 
-                            $.address.state() !== undefined && !/^\/?$/.test($.address.state()) ? 
-                                    $(target).attr('href').replace(new RegExp('^(.*' + $.address.state() + '|\\.)'), '') : 
-                                    $(target).attr('href').replace(/^(#\!?|\.)/, '');
-                        $.address.value(value);
-                    }
-                }).on('submit', function(e) {
-                    var target = e.currentTarget;
-                    if ($(target).is('form')) {
-                        e.preventDefault();
-                        var action = $(target).attr('action'),
-                            value = fn ? fn.call(target) : (action.indexOf('?') != -1 ? action.replace(/&$/, '') : action + '?') + 
-                                $(target).serialize();
-                        $.address.value(value);
-                    }
-                }).data('address', true);
-            }
-        });
+        // Changes to this method fix issue #171 at the expense of regressing https://github.com/asual/jquery-address/pull/174
+        // But this is okay for our site since we never call $().address(fn) again once the site is initialized.
+        if (!$(this).data('address')) {
+            $(document).on('click', this.selector, function(e) {
+                if (e.shiftKey || e.ctrlKey || e.metaKey || e.which == 2) {
+                    return true;
+                }
+                var target = e.currentTarget;
+                if ($(target).is('a')) {
+                    e.preventDefault();
+                    var value = fn ? fn.call(target) :
+                        /address:/.test($(target).attr('rel')) ? $(target).attr('rel').split('address:')[1].split(' ')[0] :
+                        $.address.state() !== undefined && !/^\/?$/.test($.address.state()) ?
+                                $(target).attr('href').replace(new RegExp('^(.*' + $.address.state() + '|\\.)'), '') :
+                                $(target).attr('href').replace(/^(#\!?|\.)/, '');
+                    $.address.value(value);
+                }
+            }).on('submit', this.selector, function(e) {
+                var target = e.currentTarget;
+                if ($(target).is('form')) {
+                    e.preventDefault();
+                    var action = $(target).attr('action'),
+                        value = fn ? fn.call(target) : (action.indexOf('?') != -1 ? action.replace(/&$/, '') : action + '?') +
+                            $(target).serialize();
+                    $.address.value(value);
+                }
+            }).data('address', true);
+        }
         return this;
     };
     
